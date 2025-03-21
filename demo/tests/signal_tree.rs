@@ -49,4 +49,109 @@ fn test_signal_tree_with_mdf() {
         state.deselect_channel(&first_channel.name);
         assert!(!state.get_selected_signals().contains(&first_channel.name));
     }
+}
+
+#[test]
+fn test_signal_tree_search() {
+    let test_file = get_test_mdf_file();
+    assert!(test_file.exists(), "Test file not found");
+    
+    let mut mdf = MDF::new(test_file.to_str().unwrap());
+    mdf.read_all();
+    
+    let mut state = SignalTreeState::new();
+    let channels = mdf.channels();
+    assert!(!channels.is_empty(), "No channels found in test file");
+
+    // Print channel names for debugging
+    println!("Available channels:");
+    for ch in &channels {
+        println!("  - {} ({})", ch.name, ch.full_path());
+    }
+
+    // Get the first channel's name to use as a search term
+    let first_channel = &channels[0];
+    let search_term = &first_channel.name[..std::cmp::min(3, first_channel.name.len())];
+    println!("\nUsing search term: '{}'", search_term);
+    
+    // Test that all channels match when search is empty
+    assert!(channels.iter().all(|ch| state.matches_search(ch)), 
+        "All channels should match when search is empty");
+
+    // Test partial name search
+    state.set_search_query(search_term.to_string());
+    let matching = channels.iter()
+        .filter(|ch| state.matches_search(ch))
+        .count();
+    assert!(matching > 0, "No channels matched the search term '{}'", search_term);
+    assert!(matching < channels.len(), "All channels matched the search term '{}'", search_term);
+    
+    // Test case insensitive search
+    state.set_search_query(search_term.to_uppercase());
+    let matching_upper = channels.iter()
+        .filter(|ch| state.matches_search(ch))
+        .count();
+    assert_eq!(matching, matching_upper, 
+        "Case-insensitive search should match the same number of channels");
+
+    // Test regex search
+    state.use_regex = true;
+    
+    // Test simple regex pattern
+    state.set_search_query(format!(".*{}.*", search_term));
+    let ctx = egui::Context::default();
+    let _ = ctx.run(Default::default(), |ctx| {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            state.ui(ui, Some(&mdf));
+        });
+    });
+    let regex_matching = channels.iter()
+        .try_fold(0, |count, ch| -> Result<usize, ()> {
+            if state.matches_search(ch) {
+                Ok(count + 1)
+            } else {
+                Ok(count)
+            }
+        })
+        .unwrap();
+    println!("\nRegex '{}' matches {} channels", state.search_query, regex_matching);
+    assert!(regex_matching > 0, "No channels matched the regex pattern '{}'", state.search_query);
+    assert!(regex_matching <= matching, 
+        "Regex '.*{}.*' should match fewer or equal channels than substring search", search_term);
+
+    // Test invalid regex pattern
+    state.set_search_query("[invalid regex".to_string());
+    let _ = ctx.run(Default::default(), |ctx| {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            state.ui(ui, Some(&mdf));
+        });
+    });
+    let invalid_matches = channels.iter()
+        .try_fold(0, |count, ch| -> Result<usize, ()> {
+            if state.matches_search(ch) {
+                Ok(count + 1)
+            } else {
+                Ok(count)
+            }
+        })
+        .unwrap();
+    assert_eq!(invalid_matches, 0, "Invalid regex should match no channels");
+
+    // Test complex regex pattern (e.g., matching specific path format)
+    state.set_search_query(r"\w+/\w+".to_string());  // Matches "group/channel" pattern
+    let _ = ctx.run(Default::default(), |ctx| {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            state.ui(ui, Some(&mdf));
+        });
+    });
+    let path_matches = channels.iter()
+        .try_fold(0, |count, ch| -> Result<usize, ()> {
+            if state.matches_search(ch) {
+                Ok(count + 1)
+            } else {
+                Ok(count)
+            }
+        })
+        .unwrap();
+    assert!(path_matches > 0, "No channels matched the path pattern regex");
 } 

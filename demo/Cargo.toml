@@ -16,6 +16,7 @@ workspace = true
 egui_plot = { workspace = true, features = ["serde"] }
 rsmdf = { git = "https://github.com/PCSmithy/rsmdf.git", branch = "feature/mdf-file-tests" }
 rfd = "0.14"  # For native file dialogs
+regex = "1.10"  # For regex search support
 
 egui.workspace = true
 eframe = { workspace = true, default-features = false, features = [

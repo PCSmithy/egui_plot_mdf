@@ -14,6 +14,8 @@ workspace = true
 
 [dependencies]
 egui_plot = { workspace = true, features = ["serde"] }
+rsmdf = { git = "https://github.com/PCSmithy/rsmdf.git", branch = "feature/mdf-file-tests" }
+rfd = "0.14"  # For native file dialogs
 
 egui.workspace = true
 eframe = { workspace = true, default-features = false, features = [

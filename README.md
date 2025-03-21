@@ -21,3 +21,54 @@ Immediate mode plotting for [`egui`](https://github.com/emilk/egui).
 
 ### History
 This crate was originally hosted at https://github.com/emilk/egui but was extracted into its own repository on 2024-07-15.
+
+## MDF Integration TODO List
+
+### 1. Dependency Setup
+- [x] Add rsmdf dependency to `demo/Cargo.toml`
+- [x] Configure the dependency to use your GitHub fork
+- [x] Add any necessary additional dependencies for file handling
+
+### 2. MDF File Loading
+- [ ] Create a new struct to manage MDF file state
+- [ ] Implement file selection dialog using egui's file picker
+- [ ] Add error handling for file loading
+- [ ] Add support for MF3 and MF4 formats in rsmdf fork
+  - [ ] Update MDF file format detection
+  - [ ] Implement MF3/MF4 specific parsing logic
+  - [ ] Add tests for new format support
+
+### 3. Signal Tree UI
+- [ ] Create a new panel component for signal selection
+- [ ] Implement tree view of MDF channels using egui's tree widget
+- [ ] Add checkboxes for signal selection
+- [ ] Add search/filter functionality for signals
+- [ ] Add signal grouping by data group/channel group
+- [ ] Add signal metadata display (units, sampling rate, etc.)
+
+### 4. Plot Integration
+- [ ] Create a signal data structure to hold selected signals
+- [ ] Implement signal data loading from MDF
+- [ ] Add real-time plot updates when signals are selected/deselected
+- [ ] Add time axis synchronization across plots
+- [ ] Add plot controls (zoom, pan, etc.)
+- [ ] Add signal legend with color coding
+
+### 5. Performance Optimization
+- [ ] Implement lazy loading of signal data
+- [ ] Add data caching for frequently accessed signals
+- [ ] Optimize plot rendering for large datasets
+- [ ] Add progress indicators for long operations
+
+### 6. Testing & Documentation
+- [ ] Add unit tests for MDF parsing
+- [ ] Add integration tests for UI components
+- [ ] Add documentation for new features
+- [ ] Add example usage
+
+### 7. UI/UX Improvements
+- [ ] Add keyboard shortcuts for common operations
+- [ ] Add drag-and-drop support for signal reordering
+- [ ] Add signal comparison tools
+- [ ] Add export functionality for selected signals
+- [ ] Add configuration persistence

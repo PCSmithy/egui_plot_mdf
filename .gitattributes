@@ -1,4 +1,13 @@
 * text=auto eol=lf
 Cargo.lock linguist-generated=false
-
 *.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_0.50.new.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_0.50.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_1.00.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_1.39.new.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_2.00.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/light_mode.new.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/light_mode.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_1.00.new.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_1.39.png filter=lfs diff=lfs merge=lfs -text
+demo/tests/snapshots/scale_2.00.new.png filter=lfs diff=lfs merge=lfs -text

@@ -24,26 +24,22 @@ This crate was originally hosted at https://github.com/emilk/egui but was extrac
 
 ## MDF Integration TODO List
 
-### 1. Dependency Setup
+### 1. Dependency Setup ✅
 - [x] Add rsmdf dependency to `demo/Cargo.toml`
 - [x] Configure the dependency to use your GitHub fork
 - [x] Add any necessary additional dependencies for file handling
 
-### 2. MDF File Loading
-- [ ] Create a new struct to manage MDF file state
-- [ ] Implement file selection dialog using egui's file picker
-- [ ] Add error handling for file loading
-- [ ] Add support for MF3 and MF4 formats in rsmdf fork
-  - [ ] Update MDF file format detection
-  - [ ] Implement MF3/MF4 specific parsing logic
-  - [ ] Add tests for new format support
+### 2. MDF File Loading ✅
+- [x] Create a new struct to manage MDF file state
+- [x] Implement file selection dialog using egui's file picker
+- [x] Add error handling for file loading
 
 ### 3. Signal Tree UI
-- [ ] Create a new panel component for signal selection
-- [ ] Implement tree view of MDF channels using egui's tree widget
-- [ ] Add checkboxes for signal selection
+- [x] Create a new panel component for signal selection
+- [x] Implement tree view of MDF channels using egui's tree widget
+- [x] Add checkboxes for signal selection
 - [ ] Add search/filter functionality for signals
-- [ ] Add signal grouping by data group/channel group
+- [x] Add signal grouping by data group/channel group
 - [ ] Add signal metadata display (units, sampling rate, etc.)
 
 ### 4. Plot Integration
@@ -60,15 +56,15 @@ This crate was originally hosted at https://github.com/emilk/egui but was extrac
 - [ ] Optimize plot rendering for large datasets
 - [ ] Add progress indicators for long operations
 
-### 6. Testing & Documentation
-- [ ] Add unit tests for MDF parsing
-- [ ] Add integration tests for UI components
-- [ ] Add documentation for new features
-- [ ] Add example usage
-
-### 7. UI/UX Improvements
+### 6. UI/UX Improvements
 - [ ] Add keyboard shortcuts for common operations
 - [ ] Add drag-and-drop support for signal reordering
 - [ ] Add signal comparison tools
 - [ ] Add export functionality for selected signals
 - [ ] Add configuration persistence
+
+### 7. Testing & Documentation
+- [x] Add unit tests for MDF parsing
+- [x] Add integration tests for UI components
+- [ ] Add documentation for new features
+- [ ] Add example usage

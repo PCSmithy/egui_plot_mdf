@@ -24,6 +24,7 @@ enum Panel {
     Interaction,
     CustomAxes,
     LinkedAxes,
+    MdfPlotter,
 }
 
 impl Default for Panel {
@@ -44,6 +45,7 @@ pub struct PlotDemo {
     interaction_demo: InteractionDemo,
     custom_axes_demo: CustomAxesDemo,
     linked_axes_demo: LinkedAxesDemo,
+    mdf_plotter_demo: MdfPlotterDemo,
     open_panel: Panel,
 }
 
@@ -88,6 +90,7 @@ impl PlotDemo {
                     ui.selectable_value(&mut self.open_panel, Panel::Interaction, "Interaction");
                     ui.selectable_value(&mut self.open_panel, Panel::CustomAxes, "Custom Axes");
                     ui.selectable_value(&mut self.open_panel, Panel::LinkedAxes, "Linked Axes");
+                    ui.selectable_value(&mut self.open_panel, Panel::MdfPlotter, "MDF Plotter");
                 });
         });
         ui.separator();
@@ -116,6 +119,9 @@ impl PlotDemo {
             }
             Panel::LinkedAxes => {
                 self.linked_axes_demo.ui(ui);
+            }
+            Panel::MdfPlotter => {
+                self.mdf_plotter_demo.ui(ui);
             }
         }
     }
@@ -1125,4 +1131,75 @@ fn is_approx_zero(val: f64) -> bool {
 
 fn is_approx_integer(val: f64) -> bool {
     val.fract().abs() < 1e-6
+}
+
+// ----------------------------------------------------------------------------
+
+#[derive(Default, serde::Deserialize, serde::Serialize)]
+struct MdfPlotterDemo {
+    signal_tree: crate::signal_tree::SignalTreeState,
+    #[serde(skip)]
+    mdf: Option<rsmdf::mdf::MDF>,
+    #[serde(skip)]
+    file_path: Option<std::path::PathBuf>,
+}
+
+impl PartialEq for MdfPlotterDemo {
+    fn eq(&self, other: &Self) -> bool {
+        self.signal_tree == other.signal_tree && self.file_path == other.file_path
+        // Skip comparing mdf field since MDF doesn't implement PartialEq
+    }
+}
+
+impl MdfPlotterDemo {
+    fn ui(&mut self, ui: &mut egui::Ui) {
+        ui.heading("MDF Plotter");
+        
+        // File selection button
+        if ui.button("Open MDF File...").clicked() {
+            if let Some(path) = rfd::FileDialog::new()
+                .add_filter("MDF Files", &["mf4"])
+                .pick_file() 
+            {
+                self.load_mdf_file(path);
+            }
+        }
+
+        if let Some(path) = &self.file_path {
+            ui.label(format!("Loaded file: {}", path.display()));
+        }
+
+        ui.separator();
+
+        // Use a horizontal layout with fixed proportions
+        ui.columns(2, |columns| {
+            // Left column: Signal Tree (1/3 width)
+            columns[0].set_width_range(200.0..=400.0);
+            self.signal_tree.ui(&mut columns[0], self.mdf.as_ref());
+
+            // Right column: Plot area (2/3 width)
+            columns[1].vertical(|ui| {
+                ui.label("Plot area - coming soon");
+                // TODO: Add plot visualization here
+            });
+        });
+    }
+
+    fn load_mdf_file(&mut self, path: std::path::PathBuf) {
+        use rsmdf::mdf::MDFFile;
+        match std::panic::catch_unwind(|| {
+            let mut mdf = rsmdf::mdf::MDF::new(path.to_str().unwrap());
+            mdf.read_all();
+            mdf
+        }) {
+            Ok(mdf) => {
+                self.mdf = Some(mdf);
+                self.file_path = Some(path);
+            }
+            Err(_) => {
+                // TODO: Show error dialog
+                println!("Failed to load MDF file");
+            }
+        }
+    }
 }

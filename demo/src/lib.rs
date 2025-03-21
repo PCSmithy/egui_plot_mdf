@@ -4,8 +4,9 @@
 
 #![warn(clippy::all, rust_2018_idioms)]
 
-mod app;
-mod plot_demo;
+pub mod app;
+pub mod plot_demo;
+pub mod signal_tree;
 
 pub use app::TemplateApp;
 

@@ -1,15 +1,28 @@
+use crate::plot_demo::PlotDemo;
+use egui::Context;
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[derive(Default, serde::Deserialize, serde::Serialize)]
+#[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct TemplateApp {
-    demo: crate::plot_demo::PlotDemo,
+    demo: PlotDemo,
+}
+
+impl Default for TemplateApp {
+    fn default() -> Self {
+        Self {
+            demo: Default::default(),
+        }
+    }
 }
 
 impl TemplateApp {
     /// Called once before the first frame.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // This is also where you can customize the look and feel of egui using
+        // `cc.egui_ctx.set_visuals` and `cc.egui_ctx.set_fonts`.
+
         // Load previous app state (if any).
-        // Note that you must enable the `persistence` feature for this to work.
         if let Some(storage) = cc.storage {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
@@ -25,26 +38,7 @@ impl eframe::App for TemplateApp {
     }
 
     /// Called each time the UI needs repainting, which may be many times per second.
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
-        // For inspiration and more examples, go to https://emilk.github.io/egui
-
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            // The top panel is often a good place for a menu bar:
-
-            egui::menu::bar(ui, |ui| {
-                egui::widgets::global_theme_preference_buttons(ui);
-
-                ui.add_space(16.0);
-
-                use egui::special_emojis::GITHUB;
-                ui.hyperlink_to(
-                    format!("{GITHUB} egui_plot on GitHub"),
-                    "https://github.com/emilk/egui_plot",
-                );
-            });
-        });
-
+    fn update(&mut self, ctx: &Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             self.demo.ui(ui);
         });

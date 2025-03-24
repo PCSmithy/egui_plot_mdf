@@ -2010,7 +2010,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc2f4eb4bc735547cfed7c0a4922cbd04a4655978c09b54f1f7b228750664c34"
 dependencies = [
  "cfg-if",
- "windows-targets 0.52.6",
+ "windows-targets 0.48.5",
 ]
 
 [[package]]
@@ -2875,7 +2875,7 @@ dependencies = [
 [[package]]
 name = "rsmdf"
 version = "0.1.0"
-source = "git+https://github.com/PCSmithy/rsmdf.git?branch=feature/mdf-file-tests#4a3451e6b2d72b716452c0ba2206918a6be682df"
+source = "git+https://github.com/PCSmithy/rsmdf.git?branch=feature/mdf-file-tests#e71f9c5953ab8a603f2c47d2127f89725d80f929"
 dependencies = [
  "chrono",
  "flate2",

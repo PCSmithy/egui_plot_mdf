@@ -154,4 +154,114 @@ fn test_signal_tree_search() {
         })
         .unwrap();
     assert!(path_matches > 0, "No channels matched the path pattern regex");
+}
+
+#[test]
+fn test_channel_metadata() {
+    let test_file = get_test_mdf_file();
+    assert!(test_file.exists(), "Test file not found");
+    
+    let mut mdf = MDF::new(test_file.to_str().unwrap());
+    mdf.read_all();
+    
+    let state = SignalTreeState::new();
+    let channels = mdf.channels();
+    assert!(!channels.is_empty(), "No channels found in test file");
+
+    // Test metadata for each channel
+    for channel in channels {
+        let metadata = state.get_channel_metadata(&channel, &mdf);
+        
+        // Check basic metadata fields
+        assert!(metadata.contains(&channel.name), "Metadata should contain channel name");
+        assert!(metadata.contains(&channel.full_path()), "Metadata should contain channel path");
+        assert!(metadata.contains("Channel Group:"), "Metadata should contain channel group");
+        assert!(metadata.contains("Data: Not yet implemented"), "Metadata should indicate data reading is not implemented");
+    }
+}
+
+#[test]
+fn test_hover_tooltip() {
+    let test_file = get_test_mdf_file();
+    assert!(test_file.exists(), "Test file not found");
+    
+    let mut mdf = MDF::new(test_file.to_str().unwrap());
+    mdf.read_all();
+    
+    let mut state = SignalTreeState::new();
+    let channels = mdf.channels();
+    assert!(!channels.is_empty(), "No channels found in test file");
+
+    // Create a test UI context
+    let ctx = egui::Context::default();
+    
+    // Run the UI and check the response
+    ctx.run(Default::default(), |ctx| {
+        egui::CentralPanel::default().show(ctx, |ui| {
+            // Get the first channel and its expected metadata
+            if let Some(first_channel) = channels.first() {
+                let expected_metadata = state.get_channel_metadata(first_channel, &mdf);
+                
+                // Render the signal tree UI
+                state.ui(ui, Some(&mdf));
+                
+                // Verify the metadata content
+                assert!(expected_metadata.contains(&first_channel.name), "Metadata should contain channel name");
+                assert!(expected_metadata.contains(&first_channel.full_path()), "Metadata should contain channel path");
+                assert!(expected_metadata.contains("Channel Group:"), "Metadata should contain channel group");
+                assert!(expected_metadata.contains("Data: Not yet implemented"), "Metadata should indicate data reading is not implemented");
+            }
+        });
+    });
+}
+
+#[test]
+fn test_regex_search_wipers() {
+    // Load the specific MDF file
+    let mdf_path = "/Users/smithp/Documents/code/asammdf/src/test_lin_wiper_park_mode[MY_STARFISH[vcfront_297]-wiper_ecu_WIPER_BOSCH].mf4";
+    let mut mdf = MDF::new(mdf_path);
+    mdf.read_all();
+    
+    let mut state = SignalTreeState::new();
+    let channels = mdf.channels();
+    
+    // Set up regex search
+    state.use_regex = true;
+    state.set_search_query("frameState".to_string());
+    
+    // Get matching channels and their metadata
+    let matching_channels: Vec<_> = channels.iter()
+        .filter(|ch| state.matches_search(ch))
+        .collect();
+    
+    // Count matching channels
+    let matching_count = matching_channels.len();
+    
+    // Print matching channels and their metadata for debugging
+    println!("Matching channels:");
+    for channel in matching_channels {
+        println!("\nChannel: {} ({})", channel.name, channel.full_path());
+        println!("Metadata:");
+        let metadata = state.get_channel_metadata(channel, &mdf);
+        for line in metadata.lines() {
+            println!("  {}", line);
+        }
+        
+        // Check for nested channels
+        let parent_path = channel.full_path();
+        let nested_channels: Vec<_> = channels.iter()
+            .filter(|ch| ch.full_path().starts_with(&parent_path) && ch.full_path() != parent_path)
+            .collect();
+            
+        if !nested_channels.is_empty() {
+            println!("  Nested channels:");
+            for nested in nested_channels {
+                println!("    - {} ({})", nested.name, nested.full_path());
+            }
+        } else {
+            println!("  No nested channels found");
+        }
+    }
+    
+    assert_eq!(matching_count, 3, "Expected exactly 3 channels matching the pattern 'LIN_\\w*Wipers'");
 } 

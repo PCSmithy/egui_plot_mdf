@@ -38,7 +38,7 @@ This crate was originally hosted at https://github.com/emilk/egui but was extrac
 - [x] Create a new panel component for signal selection
 - [x] Implement tree view of MDF channels using egui's tree widget
 - [x] Add checkboxes for signal selection
-- [ ] Add search/filter functionality for signals
+- [x] Add search/filter functionality for signals
 - [x] Add signal grouping by data group/channel group
 - [ ] Add signal metadata display (units, sampling rate, etc.)
 

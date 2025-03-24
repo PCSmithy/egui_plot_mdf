@@ -34,18 +34,13 @@ impl SignalTreeState {
     }
 
     pub fn ui(&mut self, ui: &mut Ui, mdf: Option<&MDF>) {
-        ui.heading("Signal Tree");
-        
-        // Add search bar with regex toggle
+        // Add search bar at the top
         ui.horizontal(|ui| {
-            ui.label("🔍");
+            ui.label("Search:");
             let search_changed = ui.text_edit_singleline(&mut self.search_query).changed();
             let regex_changed = ui.checkbox(&mut self.use_regex, "Regex").changed();
             
             if search_changed || regex_changed {
-                // Clear expanded states when search changes
-                self.expanded_groups.clear();
-                
                 // Recompile regex if needed
                 if self.use_regex && !self.search_query.is_empty() {
                     match Regex::new(&self.search_query) {
@@ -74,36 +69,53 @@ impl SignalTreeState {
             let channels = mdf.channels();
             let groups = self.group_channels(&channels);
             
-            for (group_name, channels) in groups {
-                // Skip groups with no matching channels
-                let matching_channels: Vec<_> = channels.into_iter()
-                    .filter(|ch| self.matches_search(ch))
-                    .collect();
-                
-                if matching_channels.is_empty() {
-                    continue;
-                }
+            // Sort data group names alphabetically
+            let mut data_group_names: Vec<&String> = groups.keys().collect();
+            data_group_names.sort();
+            
+            for data_group_name in data_group_names {
+                if let Some(channel_groups) = groups.get(data_group_name) {
+                    // Sort channel group names alphabetically
+                    let mut channel_group_names: Vec<&String> = channel_groups.keys().collect();
+                    channel_group_names.sort();
+                    
+                    // Create a collapsing header for the data group
+                    CollapsingHeader::new(format!("Data Group: {}", data_group_name))
+                        .default_open(true)
+                        .show(ui, |ui| {
+                            // Create nested headers for each channel group
+                            for channel_group_name in channel_group_names {
+                                if let Some(channels) = channel_groups.get(channel_group_name) {
+                                    // Filter channels in this group
+                                    let matching_channels: Vec<_> = channels.iter()
+                                        .filter(|ch| self.matches_search(ch))
+                                        .collect();
+                                    
+                                    if matching_channels.is_empty() {
+                                        continue;
+                                    }
 
-                // Auto-expand groups when searching
-                let is_searching = !self.search_query.is_empty();
-                CollapsingHeader::new(&group_name)
-                    .id_salt(format!("group_{}", group_name))
-                    .default_open(is_searching)
-                    .show(ui, |ui| {
-                        for channel in matching_channels {
-                            let mut selected = self.selected_signals.contains(&channel.name);
-                            if ui.checkbox(&mut selected, &channel.name).changed() {
-                                if selected {
-                                    self.select_channel(channel.name.clone());
-                                } else {
-                                    self.deselect_channel(&channel.name);
+                                    // Create a collapsing header for the channel group
+                                    CollapsingHeader::new(format!("Channel Group: {}", channel_group_name))
+                                        .default_open(true)
+                                        .show(ui, |ui| {
+                                            for channel in matching_channels {
+                                                let mut selected = self.selected_signals.contains(&channel.name);
+                                                let response = ui.checkbox(&mut selected, &channel.name);
+                                                
+                                                if response.changed() {
+                                                    if selected {
+                                                        self.select_channel(channel.name.clone());
+                                                    } else {
+                                                        self.deselect_channel(&channel.name);
+                                                    }
+                                                }
+                                            }
+                                        });
                                 }
                             }
-                            
-                            // Show channel metadata if available
-                            ui.small(format!("Path: {}", channel.full_path()));
-                        }
-                    });
+                        });
+                }
             }
         } else {
             ui.label("No MDF file loaded");
@@ -149,19 +161,30 @@ impl SignalTreeState {
         }
     }
 
-    pub fn group_channels<'a>(&self, channels: &'a [MdfChannel]) -> HashMap<String, Vec<&'a MdfChannel>> {
-        let mut groups: HashMap<String, Vec<&MdfChannel>> = HashMap::new();
+    pub fn group_channels<'a>(&self, channels: &'a [MdfChannel]) -> HashMap<String, HashMap<String, Vec<&'a MdfChannel>>> {
+        let mut groups: HashMap<String, HashMap<String, Vec<&'a MdfChannel>>> = HashMap::new();
         
         for channel in channels {
-            let group_name = channel.full_path()
-                .split('/')
-                .next()
-                .unwrap_or("Ungrouped")
-                .to_string();
+            let full_path = channel.full_path();
+            let path_parts: Vec<&str> = full_path.split('/').collect();
             
-            groups.entry(group_name)
+            // Get data group and channel group
+            let data_group = path_parts.get(0).unwrap_or(&"Ungrouped");
+            let channel_group = path_parts.get(1).unwrap_or(&"Ungrouped");
+            
+            // Create nested structure: data_group -> channel_group -> channels
+            groups.entry(data_group.to_string())
+                .or_default()
+                .entry(channel_group.to_string())
                 .or_default()
                 .push(channel);
+        }
+        
+        // Sort channels within each group by name
+        for channel_groups in groups.values_mut() {
+            for channels in channel_groups.values_mut() {
+                channels.sort_by(|a, b| a.name.cmp(&b.name));
+            }
         }
         
         groups
@@ -179,5 +202,20 @@ impl SignalTreeState {
 
     pub fn get_selected_signals(&self) -> &[String] {
         &self.selected_signals
+    }
+
+    pub fn get_channel_metadata(&self, channel: &MdfChannel, _mdf: &MDF) -> String {
+        // Extract channel group from full path
+        let full_path = channel.full_path();
+        let group = full_path
+            .split('/')
+            .next()
+            .unwrap_or("Ungrouped");
+            
+        format!("Name: {}\nChannel Group: {}\nPath: {}\nData: Not yet implemented in rsmdf", 
+            channel.name, 
+            group,
+            full_path
+        )
     }
 } 
